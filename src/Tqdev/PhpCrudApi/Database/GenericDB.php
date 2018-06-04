@@ -3,14 +3,14 @@ namespace Tqdev\PhpCrudApi\Database;
 
 use Tqdev\PhpCrudApi\Data\Condition\ColumnCondition;
 use Tqdev\PhpCrudApi\Data\Condition\Condition;
-use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedTable;
+use Tqdev\PhpCrudApi\reflection\Reflection\ReflectedTable;
 
 class GenericDB
 {
     private $driver;
     private $database;
     private $pdo;
-    private $meta;
+    private $reflection;
     private $columns;
     private $conditions;
     private $converter;
@@ -71,7 +71,7 @@ class GenericDB
         foreach ($commands as $command) {
             $this->pdo->query($command);
         }
-        $this->meta = new GenericMeta($this->pdo, $driver, $database);
+        $this->reflection = new GenericReflection($this->pdo, $driver, $database);
         $this->conditions = new ConditionsBuilder($driver);
         $this->columns = new ColumnsBuilder($driver);
         $this->converter = new DataConverter($driver);
@@ -82,9 +82,9 @@ class GenericDB
         return $this->pdo;
     }
 
-    public function meta(): GenericMeta
+    public function reflection(): GenericReflection
     {
-        return $this->meta;
+        return $this->reflection;
     }
 
     public function createSingle(ReflectedTable $table, array $columnValues) /*: ?String*/

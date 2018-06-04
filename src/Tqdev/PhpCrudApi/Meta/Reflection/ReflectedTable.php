@@ -1,7 +1,7 @@
 <?php
 namespace Tqdev\PhpCrudApi\Meta\Reflection;
 
-use Tqdev\PhpCrudApi\Database\GenericMeta;
+use Tqdev\PhpCrudApi\Database\GenericReflection;
 
 class ReflectedTable implements \JsonSerializable
 {
@@ -37,17 +37,17 @@ class ReflectedTable implements \JsonSerializable
         }
     }
 
-    public static function fromMeta(GenericMeta $meta, array $tableResult): ReflectedTable
+    public static function fromReflection(GenericReflection $reflection, array $tableResult): ReflectedTable
     {
         $name = $tableResult['TABLE_NAME'];
         // set columns
         $columns = [];
-        foreach ($meta->getTableColumns($name) as $tableColumn) {
-            $column = ReflectedColumn::fromMeta($meta, $tableColumn);
+        foreach ($reflection->getTableColumns($name) as $tableColumn) {
+            $column = ReflectedColumn::fromReflection($reflection, $tableColumn);
             $columns[$column->getName()] = $column;
         }
         // set primary key
-        $columnNames = $meta->getTablePrimaryKeys($name);
+        $columnNames = $reflection->getTablePrimaryKeys($name);
         if (count($columnNames) == 1) {
             $columnName = $columnNames[0];
             if (isset($columns[$columnName])) {
@@ -56,7 +56,7 @@ class ReflectedTable implements \JsonSerializable
             }
         }
         // set foreign keys
-        $fks = $meta->getTableForeignKeys($name);
+        $fks = $reflection->getTableForeignKeys($name);
         foreach ($fks as $columnName => $table) {
             $columns[$columnName]->setFk($table);
         }

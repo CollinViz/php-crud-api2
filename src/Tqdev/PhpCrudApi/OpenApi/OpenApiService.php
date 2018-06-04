@@ -1,15 +1,15 @@
 <?php
 namespace Tqdev\PhpCrudApi\OpenApi;
 
-use Tqdev\PhpCrudApi\Meta\MetaService;
+use Tqdev\PhpCrudApi\Meta\ReflectionService;
 
 class OpenApiService
 {
     private $tables;
 
-    public function __construct(MetaService $meta)
+    public function __construct(ReflectionService $reflection)
     {
-        $this->tables = $meta->getDatabase();
+        $this->tables = $reflection->getDatabase();
     }
 
 }

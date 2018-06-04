@@ -1,7 +1,7 @@
 <?php
 namespace Tqdev\PhpCrudApi\Meta\Reflection;
 
-use Tqdev\PhpCrudApi\Database\GenericMeta;
+use Tqdev\PhpCrudApi\Database\GenericReflection;
 
 class ReflectedColumn implements \JsonSerializable
 {
@@ -31,11 +31,11 @@ class ReflectedColumn implements \JsonSerializable
         $this->sanitize();
     }
 
-    public static function fromMeta(GenericMeta $meta, array $columnResult): ReflectedColumn
+    public static function fromReflection(GenericReflection $reflection, array $columnResult): ReflectedColumn
     {
         $name = $columnResult['COLUMN_NAME'];
         $length = $columnResult['CHARACTER_MAXIMUM_LENGTH'] + 0;
-        $type = $meta->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
+        $type = $reflection->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
         $precision = $columnResult['NUMERIC_PRECISION'] + 0;
         $scale = $columnResult['NUMERIC_SCALE'] + 0;
         $nullable = in_array(strtoupper($columnResult['IS_NULLABLE']), ['TRUE', 'YES', 'T', 'Y', '1']);

@@ -1,7 +1,7 @@
 <?php
 namespace Tqdev\PhpCrudApi\Database;
 
-class GenericMeta
+class GenericReflection
 {
     private $pdo;
     private $driver;

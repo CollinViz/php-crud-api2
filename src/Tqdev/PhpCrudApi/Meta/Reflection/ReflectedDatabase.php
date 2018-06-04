@@ -1,7 +1,7 @@
 <?php
 namespace Tqdev\PhpCrudApi\Meta\Reflection;
 
-use Tqdev\PhpCrudApi\Database\GenericMeta;
+use Tqdev\PhpCrudApi\Database\GenericReflection;
 
 class ReflectedDatabase implements \JsonSerializable
 {
@@ -17,15 +17,15 @@ class ReflectedDatabase implements \JsonSerializable
         }
     }
 
-    public static function fromMeta(GenericMeta $meta): ReflectedDatabase
+    public static function fromReflection(GenericReflection $reflection): ReflectedDatabase
     {
-        $name = $meta->getDatabaseName();
+        $name = $reflection->getDatabaseName();
         $tables = [];
-        foreach ($meta->getTables() as $tableName) {
-            if (in_array($tableName['TABLE_NAME'], $meta->getIgnoredTables())) {
+        foreach ($reflection->getTables() as $tableName) {
+            if (in_array($tableName['TABLE_NAME'], $reflection->getIgnoredTables())) {
                 continue;
             }
-            $table = ReflectedTable::fromMeta($meta, $tableName);
+            $table = ReflectedTable::fromReflection($reflection, $tableName);
             $tables[$table->getName()] = $table;
         }
         return new ReflectedDatabase($name, array_values($tables));

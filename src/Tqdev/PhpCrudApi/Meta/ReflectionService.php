@@ -6,7 +6,7 @@ use Tqdev\PhpCrudApi\Database\GenericDB;
 use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedDatabase;
 use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedTable;
 
-class MetaService
+class ReflectionService
 {
     private $db;
     private $cache;
@@ -20,7 +20,7 @@ class MetaService
         if ($data != '') {
             $this->tables = ReflectedDatabase::fromJson(json_decode(gzuncompress($data)));
         } else {
-            $this->tables = ReflectedDatabase::fromMeta($db->meta());
+            $this->tables = ReflectedDatabase::fromReflection($db->reflection());
             $data = gzcompress(json_encode($this->tables, JSON_UNESCAPED_UNICODE));
             $this->cache->set('ReflectedDatabase', $data, $ttl);
         }

@@ -444,7 +444,7 @@ class MetaController
     private $service;
     private $responder;
 
-    public function __construct(Router $router, Responder $responder, MetaService $service)
+    public function __construct(Router $router, Responder $responder, ReflectionService $service)
     {
         $router->register('GET', '/meta', array($this, 'getDatabase'));
         $router->register('GET', '/meta/*', array($this, 'getTable'));
@@ -874,10 +874,10 @@ class DataService
     private $ordering;
     private $pagination;
 
-    public function __construct(GenericDB $db, MetaService $meta)
+    public function __construct(GenericDB $db, ReflectionService $reflection)
     {
         $this->db = $db;
-        $this->tables = $meta->getDatabase();
+        $this->tables = $reflection->getDatabase();
         $this->columns = new ColumnSelector();
         $this->includer = new RelationIncluder($this->columns);
         $this->filters = new FilterInfo();
@@ -1934,7 +1934,7 @@ class GenericDB
     private $driver;
     private $database;
     private $pdo;
-    private $meta;
+    private $reflection;
     private $columns;
     private $conditions;
     private $converter;
@@ -1995,7 +1995,7 @@ class GenericDB
         foreach ($commands as $command) {
             $this->pdo->query($command);
         }
-        $this->meta = new GenericMeta($this->pdo, $driver, $database);
+        $this->meta = new GenericReflection($this->pdo, $driver, $database);
         $this->conditions = new ConditionsBuilder($driver);
         $this->columns = new ColumnsBuilder($driver);
         $this->converter = new DataConverter($driver);
@@ -2006,7 +2006,7 @@ class GenericDB
         return $this->pdo;
     }
 
-    public function meta(): GenericMeta
+    public function reflection(): GenericReflection
     {
         return $this->meta;
     }
@@ -2142,9 +2142,9 @@ class GenericDB
     }
 }
 
-// file: src/Tqdev/PhpCrudApi/Database/GenericMeta.php
+// file: src/Tqdev/PhpCrudApi/Database/GenericReflection.php
 
-class GenericMeta
+class GenericReflection
 {
     private $pdo;
     private $driver;
@@ -2440,11 +2440,11 @@ class ReflectedColumn implements \JsonSerializable
         $this->sanitize();
     }
 
-    public static function fromMeta(GenericMeta $meta, array $columnResult): ReflectedColumn
+    public static function fromReflection(GenericReflection $reflection, array $columnResult): ReflectedColumn
     {
         $name = $columnResult['COLUMN_NAME'];
         $length = $columnResult['CHARACTER_MAXIMUM_LENGTH'] + 0;
-        $type = $meta->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
+        $type = $reflection->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
         $precision = $columnResult['NUMERIC_PRECISION'] + 0;
         $scale = $columnResult['NUMERIC_SCALE'] + 0;
         $nullable = in_array(strtoupper($columnResult['IS_NULLABLE']), ['TRUE', 'YES', 'T', 'Y', '1']);
@@ -2584,15 +2584,15 @@ class ReflectedDatabase implements \JsonSerializable
         }
     }
 
-    public static function fromMeta(GenericMeta $meta): ReflectedDatabase
+    public static function fromReflection(GenericReflection $reflection): ReflectedDatabase
     {
-        $name = $meta->getDatabaseName();
+        $name = $reflection->getDatabaseName();
         $tables = [];
-        foreach ($meta->getTables() as $tableName) {
-            if (in_array($tableName['TABLE_NAME'], $meta->getIgnoredTables())) {
+        foreach ($reflection->getTables() as $tableName) {
+            if (in_array($tableName['TABLE_NAME'], $reflection->getIgnoredTables())) {
                 continue;
             }
-            $table = ReflectedTable::fromMeta($meta, $tableName);
+            $table = ReflectedTable::fromReflection($reflection, $tableName);
             $tables[$table->getName()] = $table;
         }
         return new ReflectedDatabase($name, array_values($tables));
@@ -2667,15 +2667,15 @@ class ReflectedTable implements \JsonSerializable
         }
     }
 
-    public static function fromMeta(GenericMeta $meta, array $tableResult): ReflectedTable
+    public static function fromReflection(GenericReflection $reflection, array $tableResult): ReflectedTable
     {
         $name = $tableResult['TABLE_NAME'];
         $columns = [];
-        foreach ($meta->getTableColumns($name) as $tableColumn) {
-            $column = ReflectedColumn::fromMeta($meta, $tableColumn);
+        foreach ($reflection->getTableColumns($name) as $tableColumn) {
+            $column = ReflectedColumn::fromReflection($reflection, $tableColumn);
             $columns[$column->getName()] = $column;
         }
-        $columnNames = $meta->getTablePrimaryKeys($name);
+        $columnNames = $reflection->getTablePrimaryKeys($name);
         if (count($columnNames) == 1) {
             $columnName = $columnNames[0];
             if (isset($columns[$columnName])) {
@@ -2683,7 +2683,7 @@ class ReflectedTable implements \JsonSerializable
                 $pk->setPk(true);
             }
         }
-        $fks = $meta->getTableForeignKeys($name);
+        $fks = $reflection->getTableForeignKeys($name);
         foreach ($fks as $columnName => $table) {
             $columns[$columnName]->setFk($table);
         }
@@ -2747,9 +2747,9 @@ class ReflectedTable implements \JsonSerializable
     }
 }
 
-// file: src/Tqdev/PhpCrudApi/Meta/MetaService.php
+// file: src/Tqdev/PhpCrudApi/Meta/ReflectionService.php
 
-class MetaService
+class ReflectionService
 {
     private $db;
     private $cache;
@@ -2763,7 +2763,7 @@ class MetaService
         if ($data != '') {
             $this->tables = ReflectedDatabase::fromJson(json_decode(gzuncompress($data)));
         } else {
-            $this->tables = ReflectedDatabase::fromMeta($db->meta());
+            $this->tables = ReflectedDatabase::fromReflection($db->reflection());
             $data = gzcompress(json_encode($this->tables, JSON_UNESCAPED_UNICODE));
             $this->cache->set('ReflectedDatabase', $data, $ttl);
         }
@@ -2871,9 +2871,9 @@ class OpenApiService
 {
     private $tables;
 
-    public function __construct(MetaService $meta)
+    public function __construct(ReflectionService $reflection)
     {
-        $this->tables = $meta->getDatabase();
+        $this->tables = $reflection->getDatabase();
     }
 
 }
@@ -3056,14 +3056,14 @@ class Api
             $config->getPassword()
         );
         $cache = CacheFactory::create($config);
-        $meta = new MetaService($db, $cache, $config->getCacheTime());
+        $reflection = new ReflectionService($db, $cache, $config->getCacheTime());
         $responder = new Responder();
         $router = new SimpleRouter($responder);
         new SecurityHeaders($router, $responder, $config->getAllowedOrigins());
-        $data = new DataService($db, $meta);
-        $openApi = new OpenApiService($meta);
+        $data = new DataService($db, $reflection);
+        $openApi = new OpenApiService($reflection);
         new DataController($router, $responder, $data);
-        new MetaController($router, $responder, $meta);
+        new MetaController($router, $responder, $reflection);
         new CacheController($router, $responder, $cache);
         new OpenApiController($router, $responder, $openApi);
         $this->router = $router;

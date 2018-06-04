@@ -3,7 +3,7 @@ namespace Tqdev\PhpCrudApi\Data;
 
 use Tqdev\PhpCrudApi\Database\GenericDB;
 use Tqdev\PhpCrudApi\Data\Record\ListResponse;
-use Tqdev\PhpCrudApi\Meta\MetaService;
+use Tqdev\PhpCrudApi\Meta\ReflectionService;
 
 class DataService
 {
@@ -15,10 +15,10 @@ class DataService
     private $ordering;
     private $pagination;
 
-    public function __construct(GenericDB $db, MetaService $meta)
+    public function __construct(GenericDB $db, ReflectionService $reflection)
     {
         $this->db = $db;
-        $this->tables = $meta->getDatabase();
+        $this->tables = $reflection->getDatabase();
         $this->columns = new ColumnSelector();
         $this->includer = new RelationIncluder($this->columns);
         $this->filters = new FilterInfo();
@@ -26,7 +26,7 @@ class DataService
         $this->pagination = new PaginationInfo();
     }
 
-    private function sanitizeRecord(String $tableName, /* object */$record, String $id)
+    private function sanitizeRecord(String $tableName, /* object */ $record, String $id)
     {
         $keyset = array_keys((array) $record);
         foreach ($keyset as $key) {
@@ -50,7 +50,7 @@ class DataService
         return $this->tables->exists($table);
     }
 
-    public function create(String $tableName, /* object */$record, array $params)
+    public function create(String $tableName, /* object */ $record, array $params)
     {
         $this->sanitizeRecord($tableName, $record, '');
         $table = $this->tables->get($tableName);
@@ -72,7 +72,7 @@ class DataService
         return $records[0];
     }
 
-    public function update(String $tableName, String $id, /* object */$record, array $params)
+    public function update(String $tableName, String $id, /* object */ $record, array $params)
     {
         $this->sanitizeRecord($tableName, $record, $id);
         $table = $this->tables->get($tableName);
