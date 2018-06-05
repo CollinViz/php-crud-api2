@@ -3,7 +3,6 @@ namespace Tqdev\PhpCrudApi\Meta;
 
 use Tqdev\PhpCrudApi\Database\GenericDB;
 use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedColumn;
-use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedTable;
 
 class DefinitionService
 {
@@ -16,12 +15,22 @@ class DefinitionService
         $this->reflection = $reflection;
     }
 
-    public function updateColumn(ReflectedTable $table, ReflectedColumn $column, /* object */ $columnChanges): void
+    public function updateColumn(String $tableName, String $columnName, /* object */ $changes): bool
     {
-        if (isset($columnChanges->name) && $columnChanges->name != $column->getName()) {
-            $this->db->definition()->renameColumn($table, $column, $columnChanges->name);
+        $table = $this->reflection->getTable($tableName);
+        $column = $table->get($columnName);
+        $newColumn = ReflectedColumn::fromJson((object) array_merge((array) $column->jsonSerialize(), (array) $changes));
+        if ($newColumn->getName() != $column->getName()) {
+            if (!$this->db->definition()->renameColumn($table->getName(), $column->getName(), $newColumn)) {
+                return false;
+            }
         }
-        $this->reflection->refresh();
+        if (!$column->hasSameType($newColumn)) {
+            if (!$this->db->definition()->retypeColumn($table->getName(), $newColumn->getName(), $newColumn)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

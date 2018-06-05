@@ -10,7 +10,7 @@ class TypeConverter
         $this->driver = $driver;
     }
 
-    private $fromSimplifiedJdbc = [
+    private $fromJdbc = [
         'mysql' => [
             'clob' => 'longtext',
             'boolean' => 'bit',
@@ -168,6 +168,15 @@ class TypeConverter
         }
         if (!isset($this->valid[$jdbcType])) {
             throw new \Exception("Unsupported type '$jdbcType' for driver '$this->driver'");
+        }
+        return $jdbcType;
+    }
+
+    public function fromJdbc(String $type): String
+    {
+        $jdbcType = strtolower($type);
+        if (isset($this->fromJdbc[$this->driver][$jdbcType])) {
+            $jdbcType = $this->fromJdbc[$this->driver][$jdbcType];
         }
         return $jdbcType;
     }

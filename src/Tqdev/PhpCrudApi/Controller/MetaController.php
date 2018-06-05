@@ -60,7 +60,6 @@ class MetaController
     {
         $tableName = $request->getPathSegment(2);
         $columnName = $request->getPathSegment(3);
-        $columnChanges = $request->getBody();
         if (!$this->reflection->hasTable($tableName)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $tableName);
         }
@@ -68,8 +67,10 @@ class MetaController
         if (!$table->exists($columnName)) {
             return $this->responder->error(ErrorCode::COLUMN_NOT_FOUND, $columnName);
         }
-        $column = $table->get($columnName);
-        $this->definition->updateColumn($table, $column, $columnChanges);
-        return $this->responder->success(true);
+        $success = $this->definition->updateColumn($tableName, $columnName, $request->getBody());
+        if ($success) {
+            $this->reflection->refresh();
+        }
+        return $this->responder->success($success);
     }
 }
