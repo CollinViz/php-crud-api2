@@ -19,7 +19,11 @@ class MetaController
         $router->register('GET', '/meta', array($this, 'getDatabase'));
         $router->register('GET', '/meta/*', array($this, 'getTable'));
         $router->register('GET', '/meta/*/*', array($this, 'getColumn'));
+        $router->register('PUT', '/meta', array($this, 'updateDatabase'));
+        $router->register('PUT', '/meta/*', array($this, 'updateTable'));
         $router->register('PUT', '/meta/*/*', array($this, 'updateColumn'));
+        $router->register('POST', '/meta', array($this, 'addTable'));
+        $router->register('POST', '/meta/*', array($this, 'addColumn'));
         $this->responder = $responder;
         $this->reflection = $reflection;
         $this->definition = $definition;

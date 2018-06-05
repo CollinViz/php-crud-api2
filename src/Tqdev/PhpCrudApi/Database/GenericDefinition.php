@@ -34,7 +34,7 @@ class GenericDefinition
             $type .= '(' . $column->getLength() . ')';
         }
         if ($column->getNullable()) {
-            $type .= $column->getNullable() ? ' NULL' : ' NOT NULL';
+            $type .= $column->getNullable() ? '' : ' NOT NULL';
         }
         return $type;
     }
