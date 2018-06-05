@@ -104,8 +104,8 @@ class GenericReflection
         return $foreignKeys;
     }
 
-    public function getTypeConverter(): TypeConverter
+    public function toJdbcType(String $type, int $size): String
     {
-        return $this->typeConverter;
+        return $this->typeConverter->toJdbc($type, $size);
     }
 }

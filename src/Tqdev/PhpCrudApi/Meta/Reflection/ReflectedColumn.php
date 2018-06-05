@@ -35,7 +35,7 @@ class ReflectedColumn implements \JsonSerializable
     {
         $name = $columnResult['COLUMN_NAME'];
         $length = $columnResult['CHARACTER_MAXIMUM_LENGTH'] + 0;
-        $type = $reflection->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
+        $type = $reflection->toJdbcType($columnResult['DATA_TYPE'], $length);
         $precision = $columnResult['NUMERIC_PRECISION'] + 0;
         $scale = $columnResult['NUMERIC_SCALE'] + 0;
         $nullable = in_array(strtoupper($columnResult['IS_NULLABLE']), ['TRUE', 'YES', 'T', 'Y', '1']);

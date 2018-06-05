@@ -441,31 +441,34 @@ class DataController
 
 class MetaController
 {
-    private $service;
     private $responder;
+    private $reflection;
+    private $definition;
 
-    public function __construct(Router $router, Responder $responder, ReflectionService $service)
+    public function __construct(Router $router, Responder $responder, ReflectionService $reflection, DefinitionService $definition)
     {
         $router->register('GET', '/meta', array($this, 'getDatabase'));
         $router->register('GET', '/meta/*', array($this, 'getTable'));
         $router->register('GET', '/meta/*/*', array($this, 'getColumn'));
-        $this->service = $service;
+        $router->register('PUT', '/meta/*/*', array($this, 'updateColumn'));
         $this->responder = $responder;
+        $this->reflection = $reflection;
+        $this->definition = $definition;
     }
 
     public function getDatabase(Request $request): Response
     {
-        $database = $this->service->getDatabase();
+        $database = $this->reflection->getDatabase();
         return $this->responder->success($database);
     }
 
     public function getTable(Request $request): Response
     {
         $tableName = $request->getPathSegment(2);
-        if (!$this->service->hasTable($tableName)) {
+        if (!$this->reflection->hasTable($tableName)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $tableName);
         }
-        $table = $this->service->getTable($tableName);
+        $table = $this->reflection->getTable($tableName);
         return $this->responder->success($table);
     }
 
@@ -473,10 +476,10 @@ class MetaController
     {
         $tableName = $request->getPathSegment(2);
         $columnName = $request->getPathSegment(3);
-        if (!$this->service->hasTable($tableName)) {
+        if (!$this->reflection->hasTable($tableName)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $tableName);
         }
-        $table = $this->service->getTable($tableName);
+        $table = $this->reflection->getTable($tableName);
         if (!$table->exists($columnName)) {
             return $this->responder->error(ErrorCode::COLUMN_NOT_FOUND, $columnName);
         }
@@ -484,6 +487,22 @@ class MetaController
         return $this->responder->success($column);
     }
 
+    public function updateColumn(Request $request): Response
+    {
+        $tableName = $request->getPathSegment(2);
+        $columnName = $request->getPathSegment(3);
+        $columnChanges = $request->getBody();
+        if (!$this->reflection->hasTable($tableName)) {
+            return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $tableName);
+        }
+        $table = $this->reflection->getTable($tableName);
+        if (!$table->exists($columnName)) {
+            return $this->responder->error(ErrorCode::COLUMN_NOT_FOUND, $columnName);
+        }
+        $column = $table->get($columnName);
+        $this->definition->updateColumn($table, $column, $columnChanges);
+        return $this->responder->success(true);
+    }
 }
 
 // file: src/Tqdev/PhpCrudApi/Controller/OpenApiController.php
@@ -885,7 +904,7 @@ class DataService
         $this->pagination = new PaginationInfo();
     }
 
-    private function sanitizeRecord(String $tableName, /* object */$record, String $id)
+    private function sanitizeRecord(String $tableName, /* object */ $record, String $id)
     {
         $keyset = array_keys((array) $record);
         foreach ($keyset as $key) {
@@ -909,7 +928,7 @@ class DataService
         return $this->tables->exists($table);
     }
 
-    public function create(String $tableName, /* object */$record, array $params)
+    public function create(String $tableName, /* object */ $record, array $params)
     {
         $this->sanitizeRecord($tableName, $record, '');
         $table = $this->tables->get($tableName);
@@ -931,7 +950,7 @@ class DataService
         return $records[0];
     }
 
-    public function update(String $tableName, String $id, /* object */$record, array $params)
+    public function update(String $tableName, String $id, /* object */ $record, array $params)
     {
         $this->sanitizeRecord($tableName, $record, $id);
         $table = $this->tables->get($tableName);
@@ -1995,7 +2014,8 @@ class GenericDB
         foreach ($commands as $command) {
             $this->pdo->query($command);
         }
-        $this->meta = new GenericReflection($this->pdo, $driver, $database);
+        $this->reflection = new GenericReflection($this->pdo, $driver, $database);
+        $this->definition = new GenericDefinition($this->pdo, $driver, $database);
         $this->conditions = new ConditionsBuilder($driver);
         $this->columns = new ColumnsBuilder($driver);
         $this->converter = new DataConverter($driver);
@@ -2008,7 +2028,12 @@ class GenericDB
 
     public function reflection(): GenericReflection
     {
-        return $this->meta;
+        return $this->reflection;
+    }
+
+    public function definition(): GenericDefinition
+    {
+        return $this->definition;
     }
 
     public function createSingle(ReflectedTable $table, array $columnValues) /*: ?String*/
@@ -2142,6 +2167,25 @@ class GenericDB
     }
 }
 
+// file: src/Tqdev/PhpCrudApi/Database/GenericDefinition.php
+
+class GenericDefinition
+{
+    private $pdo;
+    private $driver;
+    private $database;
+    private $typeConverter;
+
+    public function __construct(\PDO $pdo, String $driver, String $database)
+    {
+        $this->pdo = $pdo;
+        $this->driver = $driver;
+        $this->database = $database;
+        $this->typeConverter = new TypeConverter($driver);
+    }
+
+}
+
 // file: src/Tqdev/PhpCrudApi/Database/GenericReflection.php
 
 class GenericReflection
@@ -2247,9 +2291,9 @@ class GenericReflection
         return $foreignKeys;
     }
 
-    public function getTypeConverter(): TypeConverter
+    public function toJdbcType(String $type, int $size): String
     {
-        return $this->typeConverter;
+        return $this->typeConverter->toJdbc($type, $size);
     }
 }
 
@@ -2444,7 +2488,7 @@ class ReflectedColumn implements \JsonSerializable
     {
         $name = $columnResult['COLUMN_NAME'];
         $length = $columnResult['CHARACTER_MAXIMUM_LENGTH'] + 0;
-        $type = $reflection->getTypeConverter()->toJdbc($columnResult['DATA_TYPE'], $length);
+        $type = $reflection->toJdbcType($columnResult['DATA_TYPE'], $length);
         $precision = $columnResult['NUMERIC_PRECISION'] + 0;
         $scale = $columnResult['NUMERIC_SCALE'] + 0;
         $nullable = in_array(strtoupper($columnResult['IS_NULLABLE']), ['TRUE', 'YES', 'T', 'Y', '1']);
@@ -2747,6 +2791,26 @@ class ReflectedTable implements \JsonSerializable
     }
 }
 
+// file: src/Tqdev/PhpCrudApi/Meta/DefinitionService.php
+
+class DefinitionService
+{
+    private $db;
+
+    public function __construct(GenericDB $db)
+    {
+        $this->db = $db;
+    }
+
+    public function updateColumn(ReflectedTable $table, ReflectedColumn $column, /* object */ $columnChanges): void
+    {
+        if (isset($columnChanges->name) && $columnChanges->name != $column->getName()) {
+            $this->db->definition()->renameColumn($column->getName(), $columnChanges->name);
+        }
+    }
+
+}
+
 // file: src/Tqdev/PhpCrudApi/Meta/ReflectionService.php
 
 class ReflectionService
@@ -2858,7 +2922,7 @@ class OpenApiDefinition extends DefaultOpenApiDefinition
 
     private function fillParametersWithPrimaryKey(String $method, TableDefinition $table) /*: void*/
     {
-        if (table . getPk() != null) {
+        if ($table->getPk() != null) {
             $pathWithId = sprintf('/data/%s/{%s}', $table->getName(), $table->getPk()->getName());
             $this->set("/paths/$pathWithId/$method/responses/200/description", "$method operation");
         }
@@ -3057,13 +3121,14 @@ class Api
         );
         $cache = CacheFactory::create($config);
         $reflection = new ReflectionService($db, $cache, $config->getCacheTime());
+        $definition = new DefinitionService($db);
         $responder = new Responder();
         $router = new SimpleRouter($responder);
         new SecurityHeaders($router, $responder, $config->getAllowedOrigins());
         $data = new DataService($db, $reflection);
         $openApi = new OpenApiService($reflection);
         new DataController($router, $responder, $data);
-        new MetaController($router, $responder, $reflection);
+        new MetaController($router, $responder, $reflection, $definition);
         new CacheController($router, $responder, $cache);
         new OpenApiController($router, $responder, $openApi);
         $this->router = $router;

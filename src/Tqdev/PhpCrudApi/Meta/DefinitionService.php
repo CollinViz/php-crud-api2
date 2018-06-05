@@ -18,7 +18,10 @@ class DefinitionService
 
     public function updateColumn(ReflectedTable $table, ReflectedColumn $column, /* object */ $columnChanges): void
     {
-
+        if (isset($columnChanges->name) && $columnChanges->name != $column->getName()) {
+            $this->db->definition()->renameColumn($table, $column, $columnChanges->name);
+        }
+        $this->reflection->refresh();
     }
 
 }
