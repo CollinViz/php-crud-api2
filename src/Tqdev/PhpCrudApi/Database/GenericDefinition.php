@@ -41,6 +41,24 @@ class GenericDefinition
         return $column->getNullable() ? 'NULL' : 'NOT NULL';
     }
 
+    private function getTableRenameSQL(String $tableName, String $newTableName, array &$parameters): String
+    {
+        switch ($this->driver) {
+            case 'mysql':
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($newTableName);
+                return "RENAME TABLE $p1 TO $p2";
+            case 'pgsql':
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($newTableName);
+                return "ALTER TABLE $p1 RENAME TO $p2";
+            case 'sqlsrv':
+                $parameters[] = $tableName;
+                $parameters[] = $newTableName;
+                return "EXEC sp_rename ?, ?";
+        }
+    }
+
     private function getColumnRenameSQL(String $tableName, String $columnName, ReflectedColumn $newColumn, array &$parameters): String
     {
         switch ($this->driver) {
@@ -109,6 +127,14 @@ class GenericDefinition
                 $p4 = $this->getColumnNull($newColumn);
                 return "ALTER TABLE $p1 ALTER COLUMN $p2 $p3 $p4";
         }
+    }
+
+    public function renameTable(String $tableName, String $newTableName)
+    {
+        $parameters = [];
+        $sql = $this->getTableRenameSQL($tableName, $newTableName, $parameters);
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($parameters);
     }
 
     public function renameColumn(String $tableName, String $columnName, ReflectedColumn $newColumn)

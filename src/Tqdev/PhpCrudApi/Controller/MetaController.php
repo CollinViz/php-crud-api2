@@ -77,4 +77,17 @@ class MetaController
         }
         return $this->responder->success($success);
     }
+
+    public function updateTable(Request $request): Response
+    {
+        $tableName = $request->getPathSegment(2);
+        if (!$this->reflection->hasTable($tableName)) {
+            return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $tableName);
+        }
+        $success = $this->definition->updateTable($tableName, $request->getBody());
+        if ($success) {
+            $this->reflection->refresh();
+        }
+        return $this->responder->success($success);
+    }
 }

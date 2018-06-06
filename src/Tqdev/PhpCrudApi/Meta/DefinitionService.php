@@ -3,6 +3,7 @@ namespace Tqdev\PhpCrudApi\Meta;
 
 use Tqdev\PhpCrudApi\Database\GenericDB;
 use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedColumn;
+use Tqdev\PhpCrudApi\Meta\Reflection\ReflectedTable;
 
 class DefinitionService
 {
@@ -13,6 +14,17 @@ class DefinitionService
     {
         $this->db = $db;
         $this->reflection = $reflection;
+    }
+
+    public function updateTable(String $tableName, /* object */ $changes): bool
+    {
+        $table = $this->reflection->getTable($tableName);
+        $newTable = ReflectedTable::fromJson((object) array_merge((array) $table->jsonSerialize(), (array) $changes));
+        if ($table->getName() != $newTable->getName()) {
+            if (!$this->db->definition()->renameTable($table->getName(), $newTable->getName())) {
+                return false;
+            }
+        }return true;
     }
 
     public function updateColumn(String $tableName, String $columnName, /* object */ $changes): bool
