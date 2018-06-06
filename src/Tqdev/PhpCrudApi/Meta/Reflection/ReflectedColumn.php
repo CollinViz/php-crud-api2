@@ -144,35 +144,6 @@ class ReflectedColumn implements \JsonSerializable
         return $this->fk;
     }
 
-    public function hasSameType(ReflectedColumn $column): bool
-    {
-        if ($this->getType() != $column->getType()) {
-            return false;
-        }
-        if ($this->hasLength() != $column->hasLength()) {
-            return false;
-        }
-        if ($this->hasLength() && $this->getLength() != $column->getLength()) {
-            return false;
-        }
-        if ($this->hasPrecision() != $column->hasPrecision()) {
-            return false;
-        }
-        if ($this->hasPrecision() && $this->getPrecision() != $column->getPrecision()) {
-            return false;
-        }
-        if ($this->hasScale() != $column->hasScale()) {
-            return false;
-        }
-        if ($this->hasScale() && $this->getScale() != $column->getScale()) {
-            return false;
-        }
-        if ($this->getNullable() != $column->getNullable()) {
-            return false;
-        }
-        return true;
-    }
-
     public function jsonSerialize()
     {
         return array_filter([

@@ -25,8 +25,13 @@ class DefinitionService
                 return false;
             }
         }
-        if (!$column->hasSameType($newColumn)) {
+        if ($this->db->definition()->getColumnType($newColumn) != $this->db->definition()->getColumnType($column)) {
             if (!$this->db->definition()->retypeColumn($table->getName(), $newColumn->getName(), $newColumn)) {
+                return false;
+            }
+        }
+        if ($newColumn->getNullable() != $column->getNullable()) {
+            if (!$this->db->definition()->setColumnNullable($table->getName(), $newColumn->getName(), $newColumn)) {
                 return false;
             }
         }

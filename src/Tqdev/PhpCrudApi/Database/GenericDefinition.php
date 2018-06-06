@@ -23,7 +23,7 @@ class GenericDefinition
         return '"' . str_replace('"', '', $identifier) . '"';
     }
 
-    private function getColumnType(ReflectedColumn $column): String
+    public function getColumnType(ReflectedColumn $column): String
     {
         $type = $this->typeConverter->fromJdbc($column->getType());
         if ($column->hasPrecision() && $column->hasScale()) {
@@ -33,10 +33,12 @@ class GenericDefinition
         } else if ($column->hasLength()) {
             $type .= '(' . $column->getLength() . ')';
         }
-        if ($column->getNullable()) {
-            $type .= $column->getNullable() ? '' : ' NOT NULL';
-        }
         return $type;
+    }
+
+    private function getColumnNull(ReflectedColumn $column): String
+    {
+        return $column->getNullable() ? 'NULL' : 'NOT NULL';
     }
 
     private function getColumnRenameSQL(String $tableName, String $columnName, ReflectedColumn $newColumn, array &$parameters): String
@@ -47,7 +49,8 @@ class GenericDefinition
                 $p2 = $this->quote($columnName);
                 $p3 = $this->quote($newColumn->getName());
                 $p4 = $this->getColumnType($newColumn);
-                return "ALTER TABLE $p1 CHANGE $p2 $p3 $p4";
+                $p5 = $this->getColumnNull($newColumn);
+                return "ALTER TABLE $p1 CHANGE $p2 $p3 $p4 $p5";
             case 'pgsql':
                 $p1 = $this->quote($tableName);
                 $p2 = $this->quote($columnName);
@@ -60,7 +63,7 @@ class GenericDefinition
         }
     }
 
-    private function getColumnRetypeSQL(String $tableName, String $columnName, ReflectedColumn $newColumn, array &$parameters): String
+    private function getColumnRetypeSQL(String $tableName, String $columnName, ReflectedColumn $newColumn): String
     {
         switch ($this->driver) {
             case 'mysql':
@@ -68,7 +71,8 @@ class GenericDefinition
                 $p2 = $this->quote($columnName);
                 $p3 = $this->quote($newColumn->getName());
                 $p4 = $this->getColumnType($newColumn);
-                return "ALTER TABLE $p1 CHANGE $p2 $p3 $p4";
+                $p5 = $this->getColumnNull($newColumn);
+                return "ALTER TABLE $p1 CHANGE $p2 $p3 $p4 $p5";
             case 'pgsql':
                 $p1 = $this->quote($tableName);
                 $p2 = $this->quote($columnName);
@@ -78,7 +82,32 @@ class GenericDefinition
                 $p1 = $this->quote($tableName);
                 $p2 = $this->quote($columnName);
                 $p3 = $this->getColumnType($newColumn);
-                return "ALTER TABLE $p1 ALTER COLUMN $p2 $p3";
+                $p4 = $this->getColumnNull($newColumn);
+                return "ALTER TABLE $p1 ALTER COLUMN $p2 $p3 $p4";
+        }
+    }
+
+    private function getSetColumnNullableSQL(String $tableName, String $columnName, ReflectedColumn $newColumn): String
+    {
+        switch ($this->driver) {
+            case 'mysql':
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($columnName);
+                $p3 = $this->quote($newColumn->getName());
+                $p4 = $this->getColumnType($newColumn);
+                $p5 = $this->getColumnNull($newColumn);
+                return "ALTER TABLE $p1 CHANGE $p2 $p3 $p4 $p5";
+            case 'pgsql':
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($columnName);
+                $p3 = $newColumn->getNullable() ? 'DROP' : 'SET';
+                return "ALTER TABLE $p1 ALTER COLUMN $p2 $p3 NOT NULL";
+            case 'sqlsrv':
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($columnName);
+                $p3 = $this->getColumnType($newColumn);
+                $p4 = $this->getColumnNull($newColumn);
+                return "ALTER TABLE $p1 ALTER COLUMN $p2 $p3 $p4";
         }
     }
 
@@ -92,9 +121,15 @@ class GenericDefinition
 
     public function retypeColumn(String $tableName, String $columnName, ReflectedColumn $newColumn)
     {
-        $parameters = [];
-        $sql = $this->getColumnRetypeSQL($tableName, $columnName, $newColumn, $parameters);
+        $sql = $this->getColumnRetypeSQL($tableName, $columnName, $newColumn);
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute($parameters);
+        return $stmt->execute();
+    }
+
+    public function setColumnNullable(String $tableName, String $columnName, ReflectedColumn $newColumn)
+    {
+        $sql = $this->getSetColumnNullableSQL($tableName, $columnName, $newColumn);
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute();
     }
 }
