@@ -1,0 +1,35 @@
+PUT /meta/barcodes/product_id
+
+{"fk":""}
+===
+200
+Content-Type: application/json
+Content-Length: 4
+
+true
+===
+GET /meta/barcodes/product_id
+===
+200
+Content-Type: application/json
+Content-Length: 70
+
+{"name":"product_id","type":"integer"}
+===
+PUT /meta/barcodes/product_id
+
+{"fk":"products"}
+===
+200
+Content-Type: application/json
+Content-Length: 4
+
+true
+===
+GET /meta/barcodes/product_id
+===
+200
+Content-Type: application/json
+Content-Length: 54
+
+{"name":"product_id","type":"integer","fk":"products"}

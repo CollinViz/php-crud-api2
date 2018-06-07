@@ -1,0 +1,61 @@
+PUT /meta/events/visitors
+
+{"pk":true}
+===
+200
+Content-Type: application/json
+Content-Length: 4
+
+true
+===
+GET /meta/events/visitors
+===
+200
+Content-Type: application/json
+Content-Length: 46
+
+{"name":"visitors","type":"integer","pk":true}
+===
+GET /meta/events/id
+===
+200
+Content-Type: application/json
+Content-Length: 30
+
+{"name":"id","type":"integer"}
+===
+PUT /meta/events/visitors
+
+{"pk":false}
+===
+200
+Content-Type: application/json
+Content-Length: 4
+
+true
+===
+GET /meta/events/visitors
+===
+200
+Content-Type: application/json
+Content-Length: 36
+
+{"name":"visitors","type":"integer"}
+===
+PUT /meta/events/id
+
+{"pk":true}
+===
+200
+Content-Type: application/json
+Content-Length: 4
+
+true
+===
+GET /meta/events/id
+===
+200
+Content-Type: application/json
+Content-Length: 40
+
+{"name":"id","type":"integer","pk":true}
