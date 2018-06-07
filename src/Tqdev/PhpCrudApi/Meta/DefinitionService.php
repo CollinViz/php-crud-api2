@@ -34,7 +34,7 @@ class DefinitionService
         $newColumn = ReflectedColumn::fromJson((object) array_merge((array) $column->jsonSerialize(), (array) $changes));
         if ($newColumn->getPk() != $column->getPk() && $table->hasPk()) {
             $oldColumn = $table->getPk();
-            if ($oldColumn != null && $oldColumn->getName() != $columnName) {
+            if ($oldColumn->getName() != $columnName) {
                 if (!$this->updateColumn($tableName, $oldColumn->getName(), (object) ['pk' => false])) {
                     return false;
                 }
