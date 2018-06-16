@@ -105,9 +105,10 @@ class GenericDefinition
                 $p3 = $this->quote($newColumn->getName());
                 return "ALTER TABLE $p1 RENAME COLUMN $p2 TO $p3";
             case 'sqlsrv':
-                $p1 = $this->pdo->quote($tableName . '.' . $columnName);
-                $p2 = $this->pdo->quote($newColumn->getName());
-                return "EXEC sp_rename $p1, $p2, 'COLUMN'";
+                $p1 = $this->quote($tableName);
+                $p2 = $this->quote($columnName);
+                $p3 = $this->pdo->quote($newColumn->getName());
+                return "EXEC sp_rename $p1.$p2, $p3, 'COLUMN'";
         }
     }
 
