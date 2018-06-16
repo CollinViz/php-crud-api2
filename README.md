@@ -502,8 +502,8 @@ NB: Any non-error response will have status: 200 OK
 I am testing mainly on Ubuntu and I have the following test setups:
 
   - (Docker) Debian 9 with PHP 7.0, MariaDB 10.1, PostgreSQL 9.6 (PostGIS 2.3)
-  - (Docker) Ubuntu 16.04 with PHP 7.0, MySQL 5.7, PostgreSQL 9.5 (PostGIS 2.2) and SQL Server 2017
-  - (Docker) Ubuntu 18.04 with PHP 7.2, MySQL 5.7, PostgreSQL 10.3 (PostGIS 2.4)
+  - (Docker) Ubuntu 16.04 with PHP 7.0, MariaDB 10.0, PostgreSQL 9.5 (PostGIS 2.2) and SQL Server 2017
+  - (Docker) Ubuntu 18.04 with PHP 7.2, MySQL 5.7, PostgreSQL 10.4 (PostGIS 2.4)
 
 This covers not all environments (yet), so please notify me of failing tests and report your environment. 
 I will try to cover most relevant setups in the "docker" folder of the project.
@@ -540,7 +540,7 @@ To run the docker tests run "build_all.sh" and "run_all.sh" from the docker dire
     ================================================
     Ubuntu 16.04
     ================================================
-    [1/4] Starting MySQL 5.7 ........ done
+    [1/4] Starting MariaDB 10.0 ..... done
     [2/4] Starting PostgreSQL 9.5 ... done
     [3/4] Starting SQLServer 2017 ... done
     [4/4] Cloning PHP-CRUD-API v2 ... done
@@ -552,7 +552,7 @@ To run the docker tests run "build_all.sh" and "run_all.sh" from the docker dire
     Ubuntu 18.04
     ================================================
     [1/4] Starting MySQL 5.7 ........ done
-    [2/4] Starting PostgreSQL 10 .... done
+    [2/4] Starting PostgreSQL 10.4 .. done
     [3/4] Starting SQLServer 2017 ... skipped
     [4/4] Cloning PHP-CRUD-API v2 ... done
     ------------------------------------------------

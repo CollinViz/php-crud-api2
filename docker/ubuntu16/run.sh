@@ -3,7 +3,7 @@ echo "================================================"
 echo " Ubuntu 16.04"
 echo "================================================"
 
-echo -n "[1/4] Starting MySQL 5.7 ........ "
+echo -n "[1/4] Starting MariaDB 10.0 ..... "
 # make sure mysql can create socket and lock
 mkdir /var/run/mysqld && chmod 777 /var/run/mysqld
 # run mysql server

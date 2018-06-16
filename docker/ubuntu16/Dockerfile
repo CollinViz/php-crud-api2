@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # install: php / mysql / postgres / sqlite / tools / mssql deps
 RUN apt-get update && apt-get -y install \
 php-cli php-xml \
-mysql-server mysql-client php-mysql \
+mariadb-server mariadb-client php-mysql \
 postgresql php-pgsql \
 postgresql-9.5-postgis-2.2 \
 sqlite php-sqlite3 \
