@@ -41,8 +41,8 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 EOF
 echo "done"
 
-echo -n "[3/4] Skipping SQLServer 2017 ... "
-echo "done"
+echo -n "[3/4] Starting SQLServer 2017 ... "
+echo "skipped"
 
 echo -n "[4/4] Cloning PHP-CRUD-API v2 ... "
 # install software

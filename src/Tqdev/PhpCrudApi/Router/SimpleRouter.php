@@ -1,9 +1,9 @@
 <?php
 namespace Tqdev\PhpCrudApi\Router;
 
+use Tqdev\PhpCrudApi\Controller\Responder;
 use Tqdev\PhpCrudApi\Data\ErrorCode;
 use Tqdev\PhpCrudApi\Data\PathTree;
-use Tqdev\PhpCrudApi\Controller\Responder;
 use Tqdev\PhpCrudApi\Request;
 use Tqdev\PhpCrudApi\Response;
 
@@ -27,7 +27,7 @@ class SimpleRouter implements Router
         $this->routes->put($parts, $handler);
     }
 
-    public function load(Middleware $middleware)/*: void*/
+    public function load(Middleware $middleware) /*: void*/
     {
         if (count($this->middlewares) > 0) {
             $next = $this->middlewares[0];
