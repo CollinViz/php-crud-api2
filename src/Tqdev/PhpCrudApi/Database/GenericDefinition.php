@@ -85,7 +85,7 @@ class GenericDefinition
                 return "ALTER TABLE $p1 RENAME TO $p2";
             case 'sqlsrv':
                 $p1 = $this->pdo->quote($tableName);
-                $p2 = $this->pdo->quote($newColumn->getName());
+                $p2 = $this->pdo->quote($newTableName);
                 return "EXEC sp_rename $p1, $p2";
         }
     }
