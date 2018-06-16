@@ -501,6 +501,7 @@ NB: Any non-error response will have status: 200 OK
 
 I am testing mainly on Ubuntu and I have the following test setups:
 
+  - (Docker) Debian 9 with PHP 7.0, MariaDB 10.1, PostgreSQL 9.6 (PostGIS 2.3)
   - (Docker) Ubuntu 16.04 with PHP 7.0, MySQL 5.7, PostgreSQL 9.5 (PostGIS 2.2) and SQL Server 2017
   - (Docker) Ubuntu 18.04 with PHP 7.2, MySQL 5.7, PostgreSQL 10.3 (PostGIS 2.4)
 
@@ -526,6 +527,17 @@ Install docker using the following commands and then logout and login for the ch
 To run the docker tests run "build_all.sh" and "run_all.sh" from the docker directory. The output should be:
 
     ================================================
+    Debian 9
+    ================================================
+    [1/4] Starting MariaDB 10.1 ..... done
+    [2/4] Starting PostgreSQL 9.6 ... done
+    [3/4] Starting SQLServer 2017 ... skipped
+    [4/4] Cloning PHP-CRUD-API v2 ... done
+    ------------------------------------------------
+    mysql: 70 tests ran in 1665 ms, 0 failed
+    pgsql: 70 tests ran in 723 ms, 0 failed
+    sqlsrv: skipped, driver not loaded
+    ================================================
     Ubuntu 16.04
     ================================================
     [1/4] Starting MySQL 5.7 ........ done
@@ -548,4 +560,4 @@ To run the docker tests run "build_all.sh" and "run_all.sh" from the docker dire
     pgsql: 70 tests ran in 694 ms, 0 failed
     sqlsrv: skipped, driver not loaded
 
-The above test run (including starting up the databases) takes about 30 seconds on my machine.
+The above test run (including starting up the databases) takes less than one minute on my machine.
