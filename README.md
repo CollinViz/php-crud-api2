@@ -548,4 +548,4 @@ To run the docker tests run "build_all.sh" and "run_all.sh" from the docker dire
     pgsql: 70 tests ran in 694 ms, 0 failed
     sqlsrv: skipped, driver not loaded
 
-The above test run (including starting up the SQL servers) takes about 30 seconds on my machine.
+The above test run (including starting up the databases) takes about 30 seconds on my machine.
